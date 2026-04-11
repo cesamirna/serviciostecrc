@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Productos - Servicios Técnicos R&C</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --yellow-50: #fefce8;
+            --yellow-100: #fef9c3;
+            --yellow-200: #fef08a;
+            --yellow-300: #fde047;
+            --yellow-400: #facc15;
+            --yellow-500: #eab308;
+            --yellow-600: #ca8a04;
+            --yellow-700: #a16207;
+            --yellow-800: #854d0e;
+            --yellow-900: #713f12;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--yellow-500) 0%, var(--yellow-600) 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background-color: var(--gray-900);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--yellow-400);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .logo span {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        /* Search Bar */
+        .search-container {
+            flex: 1;
+            max-width: 600px;
+            min-width: 280px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 3rem 1rem 3.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            background-color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--gray-500);
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 0 0 3px var(--yellow-300);
+            transform: translateY(-2px);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.25rem;
+            color: var(--yellow-600);
+            transition: color 0.2s;
+        }
+
+        .search-input:focus + .search-icon,
+        .search-wrapper:hover .search-icon {
+            color: var(--gray-900);
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 1rem;
+            background: var(--gray-200);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--gray-600);
+            transition: all 0.2s;
+        }
+
+        .search-clear:hover {
+            background: var(--gray-300);
+            color: var(--gray-800);
+        }
+
+        .search-clear.visible {
+            display: flex;
+        }
+
+        .search-results-count {
+            position: absolute;
+            right: 3rem;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            background: var(--gray-100);
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .search-results-count.visible {
+            display: block;
+        }
+
+        /* Upload Button */
+        .upload-section {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--gray-900);
+            color: var(--yellow-400);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--gray-800);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--gray-700);
+            border: 2px solid var(--gray-200);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--gray-300);
+            background-color: var(--gray-50);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            background-color: var(--yellow-100);
+            padding: 0.75rem 2rem;
+            border-bottom: 1px solid var(--yellow-200);
+        }
+
+        .stats-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            font-size: 0.875rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-700);
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background-color: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .filter-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background-color: white;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--yellow-500);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Product Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Product Card */
+        .product-card {
+            background-color: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border: 1px solid var(--gray-100);
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-image-container {
+            position: relative;
+            aspect-ratio: 4/3;
+            background-color: var(--gray-100);
+            overflow: hidden;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-disponible {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-agotado {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .product-category {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            background-color: var(--yellow-400);
+            color: var(--gray-900);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .product-info {
+            padding: 1.25rem;
+        }
+
+        .product-reference {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .product-name {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .product-brand {
+            font-size: 0.875rem;
+            color: var(--yellow-700);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .product-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--gray-100);
+        }
+
+        .product-units {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .units-icon {
+            color: var(--yellow-600);
+        }
+
+        /* Loading State */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--yellow-200);
+            border-top-color: var(--yellow-500);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background-color: white;
+            border-radius: 16px;
+            border: 2px dashed var(--gray-200);
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            background-color: var(--yellow-100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .empty-icon svg {
+            width: 40px;
+            height: 40px;
+            color: var(--yellow-600);
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--gray-500);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Load More */
+        .load-more-container {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .load-more-text {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--gray-900);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        footer p {
+            color: var(--gray-400);
+            font-size: 0.875rem;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--gray-900);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            border-left: 4px solid #22c55e;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-container {
+                max-width: 100%;
+            }
+
+            .upload-section {
+                justify-content: center;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            main {
+                padding: 1rem;
+            }
+        }
+
+        /* No Image Placeholder */
+        .no-image {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--gray-100);
+            color: var(--gray-400);
+        }
+
+        .no-image svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 0.5rem;
+        }
+
+        .no-image span {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-top">
+                <div class="logo">
+                    <div class="logo-icon">R&C</div>
+                    <div>
+                        <h1>Servicios Técnicos R&C</h1>
+                        <span>Catálogo de Productos</span>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <div class="search-wrapper">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre, referencia o marca...">
+                        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                        </svg>
+                        <span class="search-results-count" id="searchResultsCount"></span>
+                        <button type="button" class="search-clear" id="searchClear" onclick="clearSearch()">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="upload-section">
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        Cargar Productos
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearProducts()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                        </svg>
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stats-content">
+            <div class="stat-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+                Total: <span class="stat-value" id="totalProducts">0</span> productos
+            </div>
+            <div class="stat-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                Disponibles: <span class="stat-value" id="availableProducts">0</span>
+            </div>
+            <div class="stat-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                Agotados: <span class="stat-value" id="outOfStockProducts">0</span>
+            </div>
+            <div class="stat-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Categorías: <span class="stat-value" id="totalCategories">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-content">
+            <span class="filter-label">Filtrar por:</span>
+            <select class="filter-select" id="categoryFilter">
+                <option value="">Todas las categorías</option>
+            </select>
+            <select class="filter-select" id="brandFilter">
+                <option value="">Todas las marcas</option>
+            </select>
+            <select class="filter-select" id="availabilityFilter">
+                <option value="">Disponibilidad</option>
+                <option value="disponible">Disponible</option>
+                <option value="agotado">Agotado</option>
+            </select>
+        </div>
+    </div>
+
+    <main>
+        <div class="products-grid" id="productsGrid"></div>
+        <div class="loading-container" id="loadingContainer" style="display: none;">
+            <div class="loading-spinner"></div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>© 2024 Servicios Técnicos R&C - Todos los derechos reservados</p>
+    </footer>
+
+    <div class="toast" id="toast">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span id="toastMessage">Mensaje</span>
+    </div>
+
+    <script>
+        // State
+        let allProducts = [];
+        let filteredProducts = [];
+        let displayedCount = 0;
+        const PRODUCTS_PER_LOAD = 20;
+
+        // Known brands and categories for dynamic detection
+        const knownBrands = [
+            'Samsung', 'LG', 'Sony', 'Panasonic', 'Philips', 'Bosch', 'Siemens', 'Whirlpool',
+            'Electrolux', 'GE', 'General Electric', 'Mabe', 'Haceb', 'Challenger', 'Indurama',
+            'Daewoo', 'Hyundai', 'Toshiba', 'Sharp', 'Hitachi', 'Mitsubishi', 'Sanyo', 'JVC',
+            'Pioneer', 'Kenwood', 'Aiwa', 'TCL', 'Hisense', 'Xiaomi', 'Haier', 'Midea',
+            'Daikin', 'Carrier', 'York', 'Lennox', 'Trane', 'Frigidaire', 'Maytag', 'KitchenAid',
+            'Oster', 'Black Decker', 'Black+Decker', 'Hamilton Beach', 'Cuisinart', 'Braun',
+            'Moulinex', 'Imusa', 'Samurai', 'Home Elements', 'Kalley', 'Abba', 'Centrales',
+            'Superior', 'Universal', 'Continental', 'Atlas', 'Inducol', 'Spring', 'Paraiso',
+            'Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'BMW', 'Mercedes', 'Toyota', 'Nissan',
+            'Chevrolet', 'Ford', 'Hyundai', 'Kia', 'Mazda', 'Renault', 'Volkswagen', 'Fiat',
+            '3M', 'Wurth', 'Stanley', 'DeWalt', 'Milwaukee', 'Makita', 'Truper', 'Pretul'
+        ];
+
+        const knownCategories = {
+            // Electrodomésticos
+            'nevera': 'Refrigeración', 'refrigerador': 'Refrigeración', 'congelador': 'Refrigeración', 'enfriador': 'Refrigeración',
+            'lavadora': 'Lavado', 'secadora': 'Lavado', 'lavaseca': 'Lavado',
+            'estufa': 'Cocina', 'horno': 'Cocina', 'microondas': 'Cocina', 'cocina': 'Cocina', 'campana': 'Cocina',
+            'licuadora': 'Pequeños Electrodomésticos', 'batidora': 'Pequeños Electrodomésticos', 'procesador': 'Pequeños Electrodomésticos',
+            'tostador': 'Pequeños Electrodomésticos', 'cafetera': 'Pequeños Electrodomésticos', 'sandwichera': 'Pequeños Electrodomésticos',
+            'plancha': 'Pequeños Electrodomésticos', 'aspiradora': 'Pequeños Electrodomésticos', 'ventilador': 'Climatización',
+            'aire acondicionado': 'Climatización', 'minisplit': 'Climatización', 'calentador': 'Climatización', 'calefactor': 'Climatización',
+            // Electrónica
+            'televisor': 'Televisores', 'tv': 'Televisores', 'smart tv': 'Televisores', 'pantalla': 'Televisores',
+            'teatro': 'Audio', 'parlante': 'Audio', 'bocina': 'Audio', 'equipo de sonido': 'Audio', 'barra de sonido': 'Audio',
+            'computador': 'Computación', 'laptop': 'Computación', 'tablet': 'Computación', 'monitor': 'Computación',
+            'celular': 'Celulares', 'smartphone': 'Celulares', 'teléfono': 'Celulares',
+            // Repuestos
+            'compresor': 'Compresores', 'motor': 'Motores', 'bomba': 'Bombas',
+            'condensador': 'Componentes Eléctricos', 'capacitor': 'Componentes Eléctricos', 'relay': 'Componentes Eléctricos', 'relé': 'Componentes Eléctricos',
+            'termostato': 'Componentes Eléctricos', 'sensor': 'Sensores', 'válvula': 'Válvulas', 'manguera': 'Mangueras',
+            'filtro': 'Filtros', 'correa': 'Correas', 'rodamiento': 'Rodamientos', 'empaque': 'Empaques',
+            'tarjeta': 'Tarjetas Electrónicas', 'placa': 'Tarjetas Electrónicas', 'circuito': 'Tarjetas Electrónicas',
+            'resistencia': 'Resistencias', 'fusible': 'Fusibles', 'cable': 'Cables', 'conector': 'Conectores',
+            'manija': 'Accesorios', 'perilla': 'Accesorios', 'botón': 'Accesorios', 'display': 'Displays',
+            'evaporador': 'Refrigeración', 'gas': 'Gases Refrigerantes', 'refrigerante': 'Gases Refrigerantes',
+            // Herramientas
+            'herramienta': 'Herramientas', 'destornillador': 'Herramientas', 'llave': 'Herramientas', 'alicate': 'Herramientas',
+            'taladro': 'Herramientas Eléctricas', 'sierra': 'Herramientas Eléctricas', 'pulidora': 'Herramientas Eléctricas'
+        };
+
+        // DOM Elements
+        const productsGrid = document.getElementById('productsGrid');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const searchInput = document.getElementById('searchInput');
+        const searchClear = document.getElementById('searchClear');
+        const searchResultsCount = document.getElementById('searchResultsCount');
+        const fileInput = document.getElementById('fileInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const brandFilter = document.getElementById('brandFilter');
+        const availabilityFilter = document.getElementById('availabilityFilter');
+
+        // Detect brand from product name
+        function detectBrand(productName) {
+            if (!productName) return '';
+            const nameLower = productName.toLowerCase();
+            for (const brand of knownBrands) {
+                if (nameLower.includes(brand.toLowerCase())) {
+                    return brand;
+                }
+            }
+            return '';
+        }
+
+        // Detect category from product name
+        function detectCategory(productName) {
+            if (!productName) return '';
+            const nameLower = productName.toLowerCase();
+            for (const [keyword, category] of Object.entries(knownCategories)) {
+                if (nameLower.includes(keyword)) {
+                    return category;
+                }
+            }
+            return '';
+        }
+
+        // Clear search
+        function clearSearch() {
+            searchInput.value = '';
+            searchClear.classList.remove('visible');
+            searchResultsCount.classList.remove('visible');
+            filterProducts();
+        }
+
+        // Update search UI
+        function updateSearchUI() {
+            const hasValue = searchInput.value.trim().length > 0;
+            searchClear.classList.toggle('visible', hasValue);
+            
+            if (hasValue && filteredProducts.length > 0) {
+                searchResultsCount.textContent = filteredProducts.length;
+                searchResultsCount.classList.add('visible');
+            } else {
+                searchResultsCount.classList.remove('visible');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProductsFromStorage();
+            setupEventListeners();
+        });
+
+        // Event Listeners
+        function setupEventListeners() {
+            fileInput.addEventListener('change', handleFileUpload);
+            searchInput.addEventListener('input', debounce(() => {
+                filterProducts();
+                updateSearchUI();
+            }, 200));
+            categoryFilter.addEventListener('change', filterProducts);
+            brandFilter.addEventListener('change', filterProducts);
+            availabilityFilter.addEventListener('change', filterProducts);
+            
+            // Infinite Scroll
+            window.addEventListener('scroll', () => {
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+                    loadMoreProducts();
+                }
+            });
+        }
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // File Upload Handler
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    // Map Excel data to product format with dynamic brand/category detection
+                    allProducts = jsonData.map((row, index) => {
+                        const nombre = row.nombre || row.Nombre || row.NOMBRE || row.producto || row.Producto || '';
+                        const excelMarca = row.marca || row.Marca || row.MARCA || '';
+                        const excelCategoria = row.categoria || row.Categoria || row.CATEGORIA || '';
+                        
+                        return {
+                            id: index + 1,
+                            referencia: row.referencia || row.Referencia || row.REF || row.ref || '',
+                            nombre: nombre,
+                            categoria: excelCategoria || detectCategory(nombre),
+                            marca: excelMarca || detectBrand(nombre),
+                            unidadPorCaja: row.unidad_por_caja || row.unidadPorCaja || row['Unidad por Caja'] || row.unidades || row.Unidades || 0,
+                            disponibilidad: normalizeAvailability(row.disponibilidad || row.Disponibilidad || row.DISPONIBILIDAD || row.stock || row.Stock || ''),
+                            imagen: row.imagen || row.Imagen || row.IMAGEN || row.image || row.Image || ''
+                        };
+                    });
+
+                    saveProductsToStorage();
+                    updateFilters();
+                    filterProducts();
+                    updateStats();
+                    showToast(`${allProducts.length} productos cargados correctamente`, 'success');
+                } catch (error) {
+                    console.error('Error parsing Excel:', error);
+                    showToast('Error al procesar el archivo Excel', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            fileInput.value = '';
+        }
+
+        // Normalize availability status
+        function normalizeAvailability(value) {
+            const normalized = String(value).toLowerCase().trim();
+            if (normalized === 'disponible' || normalized === 'si' || normalized === 'sí' || normalized === 'yes' || normalized === '1' || normalized === 'true') {
+                return 'disponible';
+            }
+            return 'agotado';
+        }
+
+        // LocalStorage functions
+        function saveProductsToStorage() {
+            localStorage.setItem('rc_products', JSON.stringify(allProducts));
+        }
+
+        function loadProductsFromStorage() {
+            const stored = localStorage.getItem('rc_products');
+            if (stored) {
+                allProducts = JSON.parse(stored);
+                updateFilters();
+                filterProducts();
+                updateStats();
+            } else {
+                renderEmptyState();
+            }
+        }
+
+        function clearProducts() {
+            if (confirm('¿Está seguro de que desea eliminar todos los productos?')) {
+                allProducts = [];
+                filteredProducts = [];
+                displayedCount = 0;
+                localStorage.removeItem('rc_products');
+                renderEmptyState();
+                updateStats();
+                categoryFilter.innerHTML = '<option value="">Todas las categorías</option>';
+                brandFilter.innerHTML = '<option value="">Todas las marcas</option>';
+                showToast('Productos eliminados', 'success');
+            }
+        }
+
+        // Update filter dropdowns
+        function updateFilters() {
+            const categories = [...new Set(allProducts.map(p => p.categoria).filter(Boolean))];
+            const brands = [...new Set(allProducts.map(p => p.marca).filter(Boolean))];
+
+            categoryFilter.innerHTML = '<option value="">Todas las categorías</option>' +
+                categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            brandFilter.innerHTML = '<option value="">Todas las marcas</option>' +
+                brands.map(b => `<option value="${b}">${b}</option>`).join('');
+        }
+
+        // Filter products
+        function filterProducts() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const category = categoryFilter.value;
+            const brand = brandFilter.value;
+            const availability = availabilityFilter.value;
+
+            filteredProducts = allProducts.filter(product => {
+                const matchesSearch = !searchTerm || 
+                    product.nombre.toLowerCase().includes(searchTerm) ||
+                    product.referencia.toLowerCase().includes(searchTerm) ||
+                    product.marca.toLowerCase().includes(searchTerm);
+                
+                const matchesCategory = !category || product.categoria === category;
+                const matchesBrand = !brand || product.marca === brand;
+                const matchesAvailability = !availability || product.disponibilidad === availability;
+
+                return matchesSearch && matchesCategory && matchesBrand && matchesAvailability;
+            });
+
+            displayedCount = 0;
+            productsGrid.innerHTML = '';
+            
+            if (filteredProducts.length === 0) {
+                renderNoResults();
+            } else {
+                loadMoreProducts();
+            }
+
+            updateSearchUI();
+        }
+
+        // Load more products (infinite scroll)
+        function loadMoreProducts() {
+            if (displayedCount >= filteredProducts.length) return;
+
+            const nextProducts = filteredProducts.slice(displayedCount, displayedCount + PRODUCTS_PER_LOAD);
+            nextProducts.forEach(product => {
+                productsGrid.appendChild(createProductCard(product));
+            });
+            displayedCount += nextProducts.length;
+        }
+
+        // Create product card
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            
+            const badgeClass = product.disponibilidad === 'disponible' ? 'badge-disponible' : 'badge-agotado';
+            const badgeText = product.disponibilidad === 'disponible' ? 'Disponible' : 'Agotado';
+
+            card.innerHTML = `
+                <div class="product-image-container">
+                    ${product.imagen ? 
+                        `<img src="imagenes/${product.imagen}" alt="${product.nombre}" class="product-image" onerror="this.parentElement.innerHTML='<div class=\\'no-image product-image\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\' ry=\\'2\\'></rect><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'></circle><polyline points=\\'21 15 16 10 5 21\\'></polyline></svg><span>Sin imagen</span></div>'">` :
+                        `<div class="no-image product-image">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <span>Sin imagen</span>
+                        </div>`
+                    }
+                    ${product.categoria ? `<span class="product-category">${product.categoria}</span>` : ''}
+                    <span class="product-badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="product-info">
+                    <p class="product-reference">REF: ${product.referencia || 'N/A'}</p>
+                    <h3 class="product-name">${product.nombre || 'Sin nombre'}</h3>
+                    <p class="product-brand">${product.marca || 'Sin marca'}</p>
+                    <div class="product-details">
+                        <div class="product-units">
+                            <svg class="units-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path>
+                            </svg>
+                            ${product.unidadPorCaja || 0} und/caja
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Render empty state
+        function renderEmptyState() {
+            productsGrid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <h3>No hay productos</h3>
+                    <p>Cargue un archivo Excel para comenzar a ver su catálogo de productos</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        Cargar Productos
+                    </button>
+                </div>
+            `;
+        }
+
+        // Render no results
+        function renderNoResults() {
+            productsGrid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                        </svg>
+                    </div>
+                    <h3>Sin resultados</h3>
+                    <p>No se encontraron productos que coincidan con tu búsqueda</p>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        Limpiar filtros
+                    </button>
+                </div>
+            `;
+        }
+
+        // Clear filters
+        function clearFilters() {
+            searchInput.value = '';
+            categoryFilter.value = '';
+            brandFilter.value = '';
+            availabilityFilter.value = '';
+            searchClear.classList.remove('visible');
+            searchResultsCount.classList.remove('visible');
+            filterProducts();
+        }
+
+        // Update stats
+        function updateStats() {
+            const total = allProducts.length;
+            const available = allProducts.filter(p => p.disponibilidad === 'disponible').length;
+            const outOfStock = allProducts.filter(p => p.disponibilidad === 'agotado').length;
+            const categories = new Set(allProducts.map(p => p.categoria).filter(Boolean)).size;
+
+            document.getElementById('totalProducts').textContent = total;
+            document.getElementById('availableProducts').textContent = available;
+            document.getElementById('outOfStockProducts').textContent = outOfStock;
+            document.getElementById('totalCategories').textContent = categories;
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.className = 'toast';
+            toast.classList.add(`toast-${type}`, 'show');
+            toastMessage.textContent = message;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
