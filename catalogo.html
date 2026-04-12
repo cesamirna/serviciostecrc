@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo de Productos - Servicios Técnicos R&C</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -678,7 +678,7 @@
                 <option value="">Todas las marcas</option>
             </select>
             <select class="filter-select" id="availabilityFilter">
-                <option value="">Disponibilidad</option>
+                <option value="">Estado</option>
                 <option value="disponible">Disponible</option>
                 <option value="agotado">Agotado</option>
             </select>
@@ -854,41 +854,50 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            loadingContainer.style.display = 'flex';
+            productsGrid.innerHTML = '';
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    
-                    // Map Excel data to product format with dynamic brand/category detection
-                    allProducts = jsonData.map((row, index) => {
-                        const nombre = row.nombre || row.Nombre || row.NOMBRE || row.producto || row.Producto || '';
-                        const excelMarca = row.marca || row.Marca || row.MARCA || '';
-                        const excelCategoria = row.categoria || row.Categoria || row.CATEGORIA || '';
+                // Use setTimeout to allow UI to update before heavy processing
+                setTimeout(() => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                         
-                        return {
-                            id: index + 1,
-                            referencia: row.referencia || row.Referencia || row.REF || row.ref || '',
-                            nombre: nombre,
-                            categoria: excelCategoria || detectCategory(nombre),
-                            marca: excelMarca || detectBrand(nombre),
-                            unidadPorCaja: row.unidad_por_caja || row.unidadPorCaja || row['Unidad por Caja'] || row.unidades || row.Unidades || 0,
-                            disponibilidad: normalizeAvailability(row.disponibilidad || row.Disponibilidad || row.DISPONIBILIDAD || row.stock || row.Stock || ''),
-                            imagen: row.imagen || row.Imagen || row.IMAGEN || row.image || row.Image || ''
-                        };
-                    });
+                        // Map Excel data to product format with dynamic brand/category detection
+                        allProducts = jsonData.map((row, index) => {
+                            const nombre = row.nombre || row.Nombre || row.NOMBRE || row.producto || row.Producto || '';
+                            const excelMarca = row.marca || row.Marca || row.MARCA || '';
+                            const excelCategoria = row.categoria || row.Categoria || row.CATEGORIA || '';
+                            const estadoRaw = row.estado || row.Estado || row.ESTADO || row.disponibilidad || row.Disponibilidad || row.DISPONIBILIDAD || row.stock || row.Stock || '';
+                            
+                            return {
+                                id: index + 1,
+                                referencia: row.referencia || row.Referencia || row.REF || row.ref || '',
+                                nombre: nombre,
+                                categoria: excelCategoria || detectCategory(nombre),
+                                marca: excelMarca || detectBrand(nombre),
+                                unidadPorCaja: row.unidad_por_caja || row.unidadPorCaja || row['Unidad por Caja'] || row.unidades || row.Unidades || 0,
+                                disponibilidad: normalizeAvailability(estadoRaw),
+                                imagen: row.imagen || row.Imagen || row.IMAGEN || row.image || row.Image || ''
+                            };
+                        });
 
-                    saveProductsToStorage();
-                    updateFilters();
-                    filterProducts();
-                    updateStats();
-                    showToast(`${allProducts.length} productos cargados correctamente`, 'success');
-                } catch (error) {
-                    console.error('Error parsing Excel:', error);
-                    showToast('Error al procesar el archivo Excel', 'error');
-                }
+                        saveProductsToStorage();
+                        updateFilters();
+                        filterProducts();
+                        updateStats();
+                        loadingContainer.style.display = 'none';
+                        showToast(`${allProducts.length} productos cargados correctamente`, 'success');
+                    } catch (error) {
+                        console.error('Error parsing Excel:', error);
+                        loadingContainer.style.display = 'none';
+                        showToast('Error al procesar el archivo Excel', 'error');
+                    }
+                }, 50);
             };
             reader.readAsArrayBuffer(file);
             fileInput.value = '';
@@ -911,10 +920,15 @@
         function loadProductsFromStorage() {
             const stored = localStorage.getItem('rc_products');
             if (stored) {
-                allProducts = JSON.parse(stored);
-                updateFilters();
-                filterProducts();
-                updateStats();
+                loadingContainer.style.display = 'flex';
+                // Use setTimeout to allow UI to render before processing
+                setTimeout(() => {
+                    allProducts = JSON.parse(stored);
+                    updateFilters();
+                    filterProducts();
+                    updateStats();
+                    loadingContainer.style.display = 'none';
+                }, 10);
             } else {
                 renderEmptyState();
             }
@@ -936,8 +950,8 @@
 
         // Update filter dropdowns
         function updateFilters() {
-            const categories = [...new Set(allProducts.map(p => p.categoria).filter(Boolean))];
-            const brands = [...new Set(allProducts.map(p => p.marca).filter(Boolean))];
+            const categories = [...new Set(allProducts.map(p => p.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+            const brands = [...new Set(allProducts.map(p => p.marca).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
 
             categoryFilter.innerHTML = '<option value="">Todas las categorías</option>' +
                 categories.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -983,9 +997,12 @@
             if (displayedCount >= filteredProducts.length) return;
 
             const nextProducts = filteredProducts.slice(displayedCount, displayedCount + PRODUCTS_PER_LOAD);
+            // Use DocumentFragment for batch DOM updates (faster rendering)
+            const fragment = document.createDocumentFragment();
             nextProducts.forEach(product => {
-                productsGrid.appendChild(createProductCard(product));
+                fragment.appendChild(createProductCard(product));
             });
+            productsGrid.appendChild(fragment);
             displayedCount += nextProducts.length;
         }
 
